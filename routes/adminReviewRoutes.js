@@ -1,27 +1,27 @@
 // routes/adminReviewRoutes.js
-const express = require('express');
+import express from "express";
+import Review from "../models/Review.js";
+import authenticate from "../middleware/authenticate.js"; // Your auth middleware
+
 const router = express.Router();
-const Review = require('../models/Review');
-const auth = require('../middleware/auth'); // Your auth middleware
 
 // Admin middleware (protect all routes)
-router.use(auth.authenticate);
-router.use(auth.isAdmin);
+router.use(authenticate);
 
 // Get all reviews (including pending)
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     
     const query = {};
-    if (status && ['pending', 'approved', 'rejected'].includes(status)) {
+    if (status && ["pending", "approved", "rejected"].includes(status)) {
       query.status = status;
     }
     
     const skip = (page - 1) * limit;
     
     const reviews = await Review.find(query)
-      .sort('-createdAt')
+      .sort("-createdAt")
       .skip(skip)
       .limit(parseInt(limit));
     
@@ -38,27 +38,27 @@ router.get('/', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching admin reviews:', error);
+    console.error("Error fetching admin reviews:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching reviews'
+      message: "Error fetching reviews"
     });
   }
 });
 
 // Approve review
-router.patch('/:id/approve', async (req, res) => {
+router.patch("/:id/approve", async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
     
     if (!review) {
       return res.status(404).json({
         success: false,
-        message: 'Review not found'
+        message: "Review not found"
       });
     }
     
-    review.status = 'approved';
+    review.status = "approved";
     review.approvedAt = new Date();
     review.approvedBy = req.user.id;
     
@@ -66,120 +66,123 @@ router.patch('/:id/approve', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Review approved successfully',
+      message: "Review approved successfully",
       data: review
     });
   } catch (error) {
-    console.error('Error approving review:', error);
+    console.error("Error approving review:", error);
     res.status(500).json({
       success: false,
-      message: 'Error approving review'
+      message: "Error approving review"
     });
   }
 });
 
 // Reject review
-router.patch('/:id/reject', async (req, res) => {
+router.patch("/:id/reject", async (req, res) => {
   try {
+    const { reason } = req.body;
     const review = await Review.findById(req.params.id);
     
     if (!review) {
       return res.status(404).json({
         success: false,
-        message: 'Review not found'
+        message: "Review not found"
       });
     }
     
-    review.status = 'rejected';
+    review.status = "rejected";
     review.rejectedAt = new Date();
     review.rejectedBy = req.user.id;
-    review.rejectionReason = req.body.reason;
+    review.rejectionReason = reason;
     
     await review.save();
     
     res.json({
       success: true,
-      message: 'Review rejected successfully',
+      message: "Review rejected successfully",
       data: review
     });
   } catch (error) {
-    console.error('Error rejecting review:', error);
+    console.error("Error rejecting review:", error);
     res.status(500).json({
       success: false,
-      message: 'Error rejecting review'
+      message: "Error rejecting review"
     });
   }
 });
 
 // Delete review
-router.delete('/:id', async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     
     if (!review) {
       return res.status(404).json({
         success: false,
-        message: 'Review not found'
+        message: "Review not found"
       });
     }
     
     res.json({
       success: true,
-      message: 'Review deleted successfully'
+      message: "Review deleted successfully"
     });
   } catch (error) {
-    console.error('Error deleting review:', error);
+    console.error("Error deleting review:", error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting review'
+      message: "Error deleting review"
     });
   }
 });
 
-// Bulk actions
-router.post('/bulk-action', async (req, res) => {
+// Get review statistics for admin
+router.get("/stats/summary", async (req, res) => {
   try {
-    const { action, ids } = req.body;
+    const summary = await Review.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          avgRating: { $avg: "$rating" }
+        }
+      }
+    ]);
     
-    if (!['approve', 'reject', 'delete'].includes(action) || !Array.isArray(ids)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid request'
-      });
-    }
+    // Format the summary
+    const formattedSummary = {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      total: 0
+    };
     
-    let update;
-    switch (action) {
-      case 'approve':
-        update = { status: 'approved', approvedAt: new Date(), approvedBy: req.user.id };
-        break;
-      case 'reject':
-        update = { status: 'rejected', rejectedAt: new Date(), rejectedBy: req.user.id };
-        break;
-      case 'delete':
-        await Review.deleteMany({ _id: { $in: ids } });
-        return res.json({
-          success: true,
-          message: `${ids.length} reviews deleted successfully`
-        });
-    }
+    summary.forEach(item => {
+      formattedSummary[item._id] = item.count;
+      formattedSummary.total += item.count;
+    });
     
-    await Review.updateMany(
-      { _id: { $in: ids } },
-      update
-    );
+    // Get recent activity
+    const recentReviews = await Review.find()
+      .sort("-createdAt")
+      .limit(5)
+      .select("name role rating status title createdAt");
     
     res.json({
       success: true,
-      message: `${ids.length} reviews ${action}d successfully`
+      data: {
+        summary: formattedSummary,
+        recentReviews
+      }
     });
   } catch (error) {
-    console.error('Error performing bulk action:', error);
+    console.error("Error fetching review summary:", error);
     res.status(500).json({
       success: false,
-      message: 'Error performing bulk action'
+      message: "Error fetching review summary"
     });
   }
 });
 
-module.exports = router;
+export default router;
