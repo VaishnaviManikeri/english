@@ -9,7 +9,7 @@ import connectDB from "./config/db.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import admissionRoutes from "./routes/admissionRoutes.js";
 import galleryRoutes from "./routes/galleryRoutes.js";
-// import reviewRoutes from "./routes/reviews.js";
+import reviewRoutes from "./routes/reviews.js"; // ✅ ADDED
 import facultyRoutes from "./routes/faculties.js";
 import noticeRoutes from "./routes/noticeRoutes.js";
 import careerRoutes from "./routes/careerRoutes.js";
@@ -32,7 +32,7 @@ app.use(
       "http://localhost:5173",        // React local
       "http://localhost:3000",
       process.env.FRONTEND_URL        // Render frontend URL
-    ],
+    ].filter(Boolean), // Remove falsy values
     credentials: true
   })
 );
@@ -53,7 +53,7 @@ app.get("/", (req, res) => {
 });
 
 // ===================== API ROUTES =====================
-// app.use("/api/reviews", reviewRoutes);
+app.use("/api/reviews", reviewRoutes); // ✅ ADDED THIS LINE
 app.use("/api/admissions", admissionRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/announcements", announcementRoutes);
@@ -61,7 +61,6 @@ app.use("/api/faculties", facultyRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/careers", careerRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/reviews", require("./routes/reviewRoutes"));
 
 // ===================== SERVER START =====================
 const PORT = process.env.PORT || 5000;
