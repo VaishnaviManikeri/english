@@ -28,10 +28,11 @@ const app = express();
 // ✅ CORS (Render + Localhost)
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",        // React local
+  origin: [
+      "http://localhost:5173",
+      "http://localhost:5174", // ✅ ADD THIS
       "http://localhost:3000",
-      process.env.FRONTEND_URL        // Render frontend URL
+      process.env.FRONTEND_URL
     ].filter(Boolean), // Remove falsy values
     credentials: true
   })
