@@ -9,7 +9,7 @@ import connectDB from "./config/db.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import admissionRoutes from "./routes/admissionRoutes.js";
 import galleryRoutes from "./routes/galleryRoutes.js";
-import reviewRoutes from "./routes/reviews.js"; // ✅ ADDED
+import reviewRoutes from "./routes/reviews.js";
 import facultyRoutes from "./routes/faculties.js";
 import noticeRoutes from "./routes/noticeRoutes.js";
 import careerRoutes from "./routes/careerRoutes.js";
@@ -25,21 +25,34 @@ const app = express();
 
 // ===================== MIDDLEWARES =====================
 
-// ✅ CORS (Render + Localhost)
-app.use(
-  cors({
-  origin: [
+// ✅ Enhanced CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
       "http://localhost:5173",
-      "http://localhost:5174", // ✅ ADD THIS
       "http://localhost:3000",
       process.env.FRONTEND_URL
-    ].filter(Boolean), // Remove falsy values
-    credentials: true
-  })
-);
+    ].filter(Boolean);
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Authorization']
+};
 
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // ===================== STATIC FILES =====================
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -54,7 +67,7 @@ app.get("/", (req, res) => {
 });
 
 // ===================== API ROUTES =====================
-app.use("/api/reviews", reviewRoutes); // ✅ ADDED THIS LINE
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/admissions", admissionRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/announcements", announcementRoutes);
@@ -63,9 +76,19 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/careers", careerRoutes);
 app.use("/api/admin", adminRoutes);
 
+// ===================== ERROR HANDLING =====================
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
+});
+
 // ===================== SERVER START =====================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ CORS enabled for: ${corsOptions.origin}`);
 });
