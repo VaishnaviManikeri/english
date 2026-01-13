@@ -1,39 +1,33 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import Admin from "../models/Admin.js";
 
 const router = express.Router();
 
-// Admin login
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  
-  // Hardcoded admin credentials for demo (use proper DB in production)
-  if (username === "admin" && password === "admin123") {
-    const token = jwt.sign(
-      { id: "admin", role: "admin" },
-      process.env.JWT_SECRET || "your-secret-key",
-      { expiresIn: "8h" }
-    );
-    return res.json({ token, user: { username, role: "admin" } });
-  }
-  
-  res.status(401).json({ message: "Invalid credentials" });
-});
 
-// Verify token
-router.post("/verify", (req, res) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return res.status(401).json({ valid: false });
+  const admin = await Admin.findOne({ username });
+  if (!admin) {
+    return res.status(401).json({ message: "Invalid credentials" });
   }
-  
-  try {
-    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    res.json({ valid: true });
-  } catch (err) {
-    res.status(401).json({ valid: false });
+
+  const isMatch = await bcrypt.compare(password, admin.password);
+  if (!isMatch) {
+    return res.status(401).json({ message: "Invalid credentials" });
   }
+
+  const token = jwt.sign(
+    { id: admin._id, role: "admin" },
+    process.env.JWT_SECRET,
+    { expiresIn: "8h" }
+  );
+
+  res.json({
+    token,
+    user: { username: admin.username, role: "admin" }
+  });
 });
 
 export default router;
