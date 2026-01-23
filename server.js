@@ -31,6 +31,7 @@ app.use(
     origin: [
       "http://localhost:5173",        // React local
       "http://localhost:3000",
+      "https://www.jadhavarenglishschool.com"
       process.env.FRONTEND_URL        // Render frontend URL
     ].filter(Boolean), // Remove falsy values
     credentials: true
