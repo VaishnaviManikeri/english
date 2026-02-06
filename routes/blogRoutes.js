@@ -42,4 +42,24 @@ router.delete("/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+// ================= UPDATE BLOG =================
+
+router.put("/:id", upload.single("image"), async (req, res) => {
+  const data = {
+    title: req.body.title,
+    description: req.body.description,
+  };
+
+  if (req.file) {
+    data.image = `/uploads/blogs/${req.file.filename}`;
+  }
+
+  const updated = await Blog.findByIdAndUpdate(req.params.id, data, {
+    new: true,
+  });
+
+  res.json(updated);
+});
+
+
 export default router;
