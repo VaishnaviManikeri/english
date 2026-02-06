@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
+import blogRoutes from "./routes/blogRoutes.js";
 
 // Import ALL routes
 import announcementRoutes from "./routes/announcementRoutes.js";
@@ -62,6 +63,7 @@ app.use("/api/faculties", facultyRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/careers", careerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/blogs", blogRoutes);
 
 // ===================== SERVER START =====================
 const PORT = process.env.PORT || 5000;
