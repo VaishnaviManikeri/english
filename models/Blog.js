@@ -6,7 +6,7 @@ const blogSchema = new mongoose.Schema(
     description: String,
     image: String,
   },
-  { timestamps: true }
+  { timestamps: true } // 👈 automatically adds createdAt
 );
 
 export default mongoose.model("Blog", blogSchema);
