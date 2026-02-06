@@ -45,6 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 // ===================== STATIC FILES =====================
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/noticeupload", express.static(path.join(__dirname, "noticeupload")));
+app.use("/api/blogs", blogRoutes);
 
 // ===================== DATABASE =====================
 connectDB();
@@ -63,7 +64,6 @@ app.use("/api/faculties", facultyRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/careers", careerRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/blogs", blogRoutes);
 
 // ===================== SERVER START =====================
 const PORT = process.env.PORT || 5000;
