@@ -4,13 +4,13 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
-import blogRoutes from "./routes/blogRoutes.js";
 
 // Import ALL routes
+import blogRoutes from "./routes/blogRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import admissionRoutes from "./routes/admissionRoutes.js";
 import galleryRoutes from "./routes/galleryRoutes.js";
-import reviewRoutes from "./routes/reviews.js"; // ✅ ADDED
+import reviewRoutes from "./routes/reviews.js";
 import facultyRoutes from "./routes/faculties.js";
 import noticeRoutes from "./routes/noticeRoutes.js";
 import careerRoutes from "./routes/careerRoutes.js";
@@ -24,46 +24,58 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// ===================== MIDDLEWARES =====================
+// ===================== SAFE CORS FIX =====================
 
-// ✅ CORS (Render + Localhost)
+const origins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://www.jadhavarenglishschool.com",
+  "https://jadhavarenglishschool.com"
+];
+
+// Add env URL safely
+if (process.env.FRONTEND_URL) {
+  origins.push(process.env.FRONTEND_URL);
+}
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",        // React local
-      "http://localhost:3000",
-      "https://www.jadhavarenglishschool.com",
-      "https://jadhavarenglishschool.com"
-      process.env.FRONTEND_URL        // Render frontend URL
-    ].filter(Boolean),
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // ✅ ADDED
+    origin: origins,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
   })
 );
+
+// ===================== BODY PARSER =====================
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ===================== STATIC FILES =====================
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/noticeupload", express.static(path.join(__dirname, "noticeupload")));
-app.use("/api/blogs", blogRoutes);
 
 // ===================== DATABASE =====================
+
 connectDB();
 
-// ===================== TEST ROUTE =====================
+// ===================== ROOT ROUTE =====================
+
 app.get("/", (req, res) => {
   res.send("Jadhavar Educational Institute Backend Running Successfully");
 });
 
-// ===================== ✅ PING ROUTE (ADDED) =====================
+// ===================== ✅ PING ROUTE =====================
+
 app.get("/ping", (req, res) => {
   res.send("✅ Server is alive");
 });
 
 // ===================== API ROUTES =====================
-app.use("/api/reviews", reviewRoutes); // ✅ ADDED THIS LINE
+
+app.use("/api/blogs", blogRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/admissions", admissionRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/announcements", announcementRoutes);
@@ -72,7 +84,18 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/careers", careerRoutes);
 app.use("/api/admin", adminRoutes);
 
+// ===================== ERROR HANDLER =====================
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: "Something went wrong!",
+    details: err.message
+  });
+});
+
 // ===================== SERVER START =====================
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
