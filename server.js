@@ -34,7 +34,8 @@ app.use(
       "http://localhost:3000",
       "https://www.jadhavarenglishschool.com",
       process.env.FRONTEND_URL        // Render frontend URL
-    ].filter(Boolean), // Remove falsy values
+    ].filter(Boolean),
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // ✅ ADDED
     credentials: true
   })
 );
@@ -53,6 +54,11 @@ connectDB();
 // ===================== TEST ROUTE =====================
 app.get("/", (req, res) => {
   res.send("Jadhavar Educational Institute Backend Running Successfully");
+});
+
+// ===================== ✅ PING ROUTE (ADDED) =====================
+app.get("/ping", (req, res) => {
+  res.send("✅ Server is alive");
 });
 
 // ===================== API ROUTES =====================
