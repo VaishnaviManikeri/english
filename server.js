@@ -33,6 +33,7 @@ app.use(
       "http://localhost:5173",        // React local
       "http://localhost:3000",
       "https://www.jadhavarenglishschool.com",
+      "https://jadhavarenglishschool.com"
       process.env.FRONTEND_URL        // Render frontend URL
     ].filter(Boolean),
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // ✅ ADDED
