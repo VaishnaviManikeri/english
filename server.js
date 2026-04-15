@@ -72,6 +72,17 @@ app.get("/ping", (req, res) => {
   res.send("✅ Server is alive");
 });
 
+// ===================== ✅ HOSTINGER STATUS API =====================
+
+app.get("/api/status", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Backend is running successfully on Hostinger 🚀",
+    uptime: process.uptime(),
+    timestamp: new Date()
+  });
+});
+
 // ===================== API ROUTES =====================
 
 app.use("/api/blogs", blogRoutes);
@@ -96,7 +107,7 @@ app.use((err, req, res, next) => {
 
 // ===================== SERVER START =====================
 
-const PORT = process.env.PORT || 5000;
+const PORT = 5006; // ✅ Updated port
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
