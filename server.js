@@ -107,7 +107,7 @@ app.use((err, req, res, next) => {
 
 // ===================== SERVER START =====================
 
-const PORT = 5006; // ✅ Updated port
+const PORT = 5025; // ✅ Updated port
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
