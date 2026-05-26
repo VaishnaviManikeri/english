@@ -5,8 +5,6 @@ const router = express.Router();
 
 // Admin login
 router.post("/login", (req, res) => {
-  console.log("Login attempt received:", req.body); // Debug log
-  
   const { username, password } = req.body;
 
   // Hardcoded admin credentials (demo purpose)
@@ -17,15 +15,12 @@ router.post("/login", (req, res) => {
       { expiresIn: "8h" }
     );
 
-    console.log("Login successful for user:", username); // Debug log
-    
     return res.json({
       token,
       user: { username: "jadhavar", role: "admin" },
     });
   }
 
-  console.log("Login failed for user:", username); // Debug log
   res.status(401).json({ message: "Invalid credentials" });
 });
 
